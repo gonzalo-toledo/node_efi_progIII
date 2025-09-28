@@ -43,12 +43,12 @@ const listar = async (req, res) => {
 
 const crear = async (req, res) => {
   try {
-    const { nombre, precio, descripcion } = req.body;
+    const { nombre, precio, descripcion, disponibilidad } = req.body;
     if (!nombre || !precio) {
       return res.status(400).json({ status: 400, message: "Faltan datos obligatorios" });
     }
 
-    const plato = await Plato.create({ nombre, precio, descripcion });
+    const plato = await Plato.create({ nombre, precio, descripcion, disponibilidad });
     res.status(201).json({
       data: plato,
       status: 201,
@@ -66,13 +66,14 @@ const crear = async (req, res) => {
 
 const actualizar = async (req, res) => {
   try {
-    const { nombre, precio, descripcion } = req.body;
+    const { nombre, precio, descripcion, disponibilidad } = req.body;
     const plato = await Plato.findByPk(req.params.id);
     if (!plato) return res.status(404).json({ status: 404, message: 'Plato no encontrado' });
 
     plato.nombre = nombre || plato.nombre;
     plato.precio = precio || plato.precio;
     plato.descripcion = descripcion || plato.descripcion;
+    plato.disponibilidad = (disponibilidad !== undefined) ? disponibilidad : plato.disponibilidad;
 
     await plato.save();
     res.json({
