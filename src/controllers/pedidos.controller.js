@@ -1,68 +1,164 @@
 // src/controllers/pedidos.controller.js
-const { Pedido, Mesa, DetallePedido, Plato } = require('../models');
+const { Pedido, DetallePedido, Plato, Mesa, Usuario } = require('../models');
 
-const crear = async (req, res, next) => {
+
+// Listar pedidos
+const listar = async (req, res) => {
   try {
-    const { mesaId, items } = req.body; // items: [{platoId, cantidad}]
-    const mesa = await Mesa.findByPk(mesaId);
-    if (!mesa) return res.status(400).json({ message: 'Mesa inválida' });
+    const page = Math.max(1, parseInt(req.query.page)) || 1;
+    const limit = Math.max(1, parseInt(req.query.limit)) || 10;
+    const q = (req.query.q || '').toLowerCase().trim();
+    const offset = (page - 1) * limit;
 
-    const pedido = await Pedido.create({ mesaId, meseroId: req.user.id, estado: 'pendiente', total: 0 });
-    let total = 0;
+    // Condición de búsqueda
+    const where = q ? { estado: { [Op.like]: `%${q}%` } } : {};
 
-    for (const it of (items || [])) {
-      const plato = await Plato.findByPk(it.platoId);
-      if (!plato || !plato.disponibilidad) continue;
-      const precio = Number(plato.precio);
-      await DetallePedido.create({ pedidoId: pedido.id, platoId: plato.id, cantidad: it.cantidad, precioUnitario: precio });
-      total += (it.cantidad || 0) * precio;
-    }
-    await pedido.update({ total });
-    res.status(201).json(pedido);
-  } catch (e) { next(e); }
-};
 
-const listar = async (req, res, next) => {
-  try {
-    const where = {};
-    if (req.user.rol === 'mesero') where.meseroId = req.user.id;
-
-    // Nota: mantener import dinámico como en tu versión anterior si así lo preferís.
-    const { Mesa: MesaModel, DetallePedido: DetalleModel, Plato: PlatoModel } = await import('../models/index.js');
-
-    const rows = await Pedido.findAll({
+    const { rows, count } = await Pedidos.findAndCountAll({
       where,
-      include: [
-        { model: MesaModel },
-        { model: DetalleModel, as: 'detalles', include: [PlatoModel] }
-      ],
-      order: [['created_at','DESC']]
+      limit,
+      offset,
+      order: [['capacidad', 'ASC']]
     });
-    res.json(rows);
-  } catch (e) { next(e); }
-};
 
-const cambiarEstado = async (req, res, next) => {
-  try {
-    const row = await Pedido.findByPk(req.params.id);
-    if (!row) return res.status(404).json({ message: 'No existe' });
-    const { estado } = req.body; // 'pendiente'|'en preparación'|'servido'
-    await row.update({ estado });
-    res.json(row);
-  } catch (e) { next(e); }
-};
-
-const eliminar = async (req, res, next) => {
-  try {
-    const row = await Pedido.findByPk(req.params.id);
-    if (!row) return res.status(404).json({ message: 'No existe' });
-    await row.destroy();
-    res.json({
-        data: row,
-        status: 204,
-        message: 'Pedido eliminado exitosamente'
+    return res.json({
+      data: rows,
+      total: count,
+      page,
+      totalPages: Math.ceil(count / limit),
+      status: 200,
+      message: 'Pedidos obtenidos exitosamente'
     });
-  } catch (e) { next(e); }
+  } catch (error) {
+    res.status(500).json({
+      status: 500,
+      message: 'Error al listar pedidos',
+      error: error.message
+    });
+  }
 };
 
-module.exports = { crear, listar, cambiarEstado, eliminar };
+
+// Crear un pedido
+const crear = async (req, res) => {
+  const t = await Pedido.sequelize.transaction();
+  try {
+    const { mesaId, meseroId, detalles } = req.body;
+    // detalles: [{ platoId, cantidad }, ...]
+
+    if (!mesaId || !meseroId || !detalles || !detalles.length) {
+      return res.status(400).json({ message: 'Faltan datos obligatorios' });
+    }
+
+    // Verificar que la mesa exista
+    const mesa = await Mesa.findByPk(mesaId);
+    if (!mesa) return res.status(404).json({ message: 'Mesa no encontrada' });
+
+    // Crear el pedido
+    const pedido = await Pedido.create({ mesaId, meseroId, estado: 'pendiente', total: 0 }, { transaction: t });
+
+    let total = 0;
+    for (const item of detalles) {
+      const plato = await Plato.findByPk(item.platoId);
+      if (!plato) throw new Error(`Plato con id ${item.platoId} no encontrado`);
+
+      const subtotal = plato.precio * item.cantidad;
+      total += subtotal;
+
+      await DetallePedido.create({
+        pedidoId: pedido.id,
+        platoId: plato.id,
+        cantidad: item.cantidad,
+        precioUnitario: plato.precio
+      }, { transaction: t });
+    }
+
+    pedido.total = total;
+    await pedido.save({ transaction: t });
+
+    await t.commit();
+    res.status(201).json({ 
+      data: pedido,
+      message: 'Pedido creado exitosamente' 
+    });
+  } catch (error) {
+    await t.rollback();
+    res.status(500).json({ 
+      message: 'Error al crear el pedido',
+      error: error.message 
+    });
+  }
+};
+
+
+// Actualizar estado de un pedido
+const actualizarEstado = async (req, res) => {
+  try {
+    const { estado } = req.body;
+    const usuario = req.user;
+
+    const pedido = await Pedido.findByPk(req.params.id);
+    if (!pedido) return res.status(404).json({ message: 'Pedido no encontrado' });
+
+    if (usuario.rol === 'cocinero') {
+      if (pedido.estado === 'pendiente' && estado === 'en preparación') pedido.estado = 'en preparación';
+      else if (pedido.estado === 'en preparación' && estado === 'servido') pedido.estado = 'servido';
+      else return res.status(400).json({ message: 'Transición de estado no permitida para cocinero' });
+    } else if (usuario.rol === 'mesero') {
+      if (estado === 'servido') pedido.estado = 'servido';
+      else return res.status(400).json({ message: 'El mesero solo puede marcar como servido' });
+    } else if (usuario.rol === 'admin') {
+      pedido.estado = estado;
+    }
+
+    await pedido.save();
+    res.json({ 
+      data: pedido,
+      message: 'Estado actualizado exitosamente'
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      message: 'Error al actualizar estado',
+      error: error.message 
+    });
+  }
+};
+
+// Eliminar pedido
+const eliminar = async (req, res) => {
+  try {
+    const usuario = req.user;
+    if (usuario.rol !== 'admin') {
+      return res.status(403).json({ message: 'Solo el admin puede cancelar pedidos' });
+    }
+
+    const pedido = await Pedido.findByPk(req.params.id);
+    if (!pedido) {
+      return res.status(404).json({ message: 'Pedido no encontrado' });
+    }
+
+    // Si ya estaba cancelado, no lo volvemos a tocar
+    if (pedido.estado === 'cancelado') {
+      return res.json({ 
+        data: pedido, 
+        message: 'El pedido ya estaba cancelado' 
+      });
+    }
+
+    pedido.estado = 'cancelado';
+    await pedido.save();
+
+    res.json({ 
+      data: pedido, 
+      message: 'Pedido cancelado exitosamente (borrado lógico)' 
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: 'Error al cancelar el pedido', 
+      error: error.message 
+    });
+  }
+};
+
+
+module.exports = { crear, listar, actualizarEstado, eliminar };

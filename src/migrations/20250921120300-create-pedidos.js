@@ -17,8 +17,9 @@ module.exports = {
       },
 
       estado: {
-        type: Sequelize.ENUM('pendiente', 'en preparación', 'servido'),
-        allowNull: false, defaultValue: 'pendiente'
+        type: Sequelize.ENUM('pendiente', 'en preparación', 'listo', 'servido', 'cancelado'),
+        allowNull: false,
+        defaultValue: 'pendiente'
       },
 
       total: { type: Sequelize.DECIMAL(10,2), allowNull: false, defaultValue: 0 },
