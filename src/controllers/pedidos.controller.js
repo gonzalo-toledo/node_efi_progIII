@@ -1,6 +1,6 @@
 // src/controllers/pedidos.controller.js
 const { Pedido, DetallePedido, Plato, Mesa, Usuario } = require('../models');
-
+const { Op } = require('sequelize');
 
 // Listar pedidos
 const listar = async (req, res) => {
@@ -11,7 +11,7 @@ const listar = async (req, res) => {
     const offset = (page - 1) * limit;
 
     // Condición de búsqueda
-    const where = q ? { estado: { [Op.like]: `%${q}%` } } : {};
+    const where = q ? { [Op.or]: [{ estado: { [Op.like]: `%${q}%` } }] } : {};
 
 
     const { rows, count } = await Pedido.findAndCountAll({

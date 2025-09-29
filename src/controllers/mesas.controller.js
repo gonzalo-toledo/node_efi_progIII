@@ -1,7 +1,8 @@
 // src/controllers/mesas.controller.js
 const { Mesa } = require('../models');
+const { Op } = require('sequelize');
 
-const listar = async (req, res, next) => {
+const listar = async (req, res) => {
   try {
     //Cuando pongas la condicion de busqueda ponela para que busque por capacidad!
     const page = Math.max(1, parseInt(req.query.page)) || 1;
@@ -60,7 +61,7 @@ const crear = async (req, res) => {
     }
 };
 
-const actualizar = async (req, res, next) => {
+const actualizar = async (req, res) => {
   try {
     const { capacidad, disponible } = req.body;
     const mesa = await Mesa.findByPk(req.params.id);
@@ -83,7 +84,7 @@ const actualizar = async (req, res, next) => {
   }
 };
 
-const eliminar = async (req, res, next) => {
+const eliminar = async (req, res) => {
   try {
     const mesa = await Mesa.findByPk(req.params.id);
     if (!mesa) return res.status(404).json({ message: 'Mesa no encontrada' });
