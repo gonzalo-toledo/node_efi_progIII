@@ -5,13 +5,13 @@ const checkRole = require('../middleware/checkRole.js');
 const {
     listar,
     crear,
-    cambiarEstado,
+    actualizarEstado,
     eliminar,
 } = require('../controllers/pedidos.controller');
 
 const router = Router();
 router.post('/',     verifyToken, checkRole('mesero','admin'), crear);
-router.get('/',      verifyToken, listar);
-router.put('/:id',   verifyToken, checkRole('cocinero','mesero','admin'), cambiarEstado);
+router.get('/', listar);
+router.put('/:id',   verifyToken, checkRole('cocinero','mesero','admin'), actualizarEstado);
 router.delete('/:id',verifyToken, checkRole('admin'), eliminar);
 module.exports = router;

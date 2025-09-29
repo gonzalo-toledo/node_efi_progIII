@@ -14,11 +14,11 @@ const listar = async (req, res) => {
     const where = q ? { estado: { [Op.like]: `%${q}%` } } : {};
 
 
-    const { rows, count } = await Pedidos.findAndCountAll({
+    const { rows, count } = await Pedido.findAndCountAll({
       where,
       limit,
       offset,
-      order: [['capacidad', 'ASC']]
+      order: [['id', 'ASC']]
     });
 
     return res.json({

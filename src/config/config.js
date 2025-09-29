@@ -2,8 +2,8 @@ require('dotenv').config();
 
 module.exports = {
   "development": {
-    "username": process.env.DB_USER ?? (() => { throw new Error("DB_USER is required"); })(),
-    "password": process.env.DB_PASSWORD ?? (() => { throw new Error("DB_PASSWORD is required"); })(),
+    "username": process.env.DB_USER,
+    "password": process.env.DB_PASSWORD,
     "database": "restaurant_app",
     "host": "127.0.0.1",
     "dialect": "mysql"
