@@ -10,8 +10,14 @@ const {
 
 
 const router = Router();
-router.get('/',      verifyToken, listar);
-router.post('/',     verifyToken, checkRole('admin'), crear);
-router.put('/:id',   verifyToken, checkRole('admin'), actualizar);
-router.delete('/:id',verifyToken, checkRole('admin'), eliminar);
+// router.get('/',      verifyToken, listar);
+// router.post('/',     verifyToken, checkRole('admin'), crear);
+// router.put('/:id',   verifyToken, checkRole('admin'), actualizar);
+// router.delete('/:id',verifyToken, checkRole('admin'), eliminar);
+
+
+router.get('/', listar);
+router.post('/',      crear);
+router.put('/:id',    actualizar);
+router.delete('/:id', eliminar);
 module.exports = router;

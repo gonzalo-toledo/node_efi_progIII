@@ -3,6 +3,9 @@ const { Mesa } = require('../models');
 
 const listar = async (req, res, next) => {
   try {
+
+    //Cuando pongas la condicion de busqueda ponela para que busque por capacidad!
+    
     const { disponible } = req.query;
     const where = {};
     if (typeof disponible !== 'undefined') where.disponible = disponible === 'true';
@@ -10,8 +13,28 @@ const listar = async (req, res, next) => {
   } catch (e) { next(e); }
 };
 
-const crear = async (req, res, next) => {
-  try { res.status(201).json(await Mesa.create(req.body)); } catch (e) { next(e); }
+const crear = async (req, res) => {
+  try {
+    const { numero, capacidad, disponible } = req.body;
+
+    const exixte = await Mesa.findOne({ where: { numero } });
+    if (exixte) {
+      return res.status(400).json({ message: 'Ya existe una mesa con ese número' });
+    }
+
+    const mesa = await Mesa.create({ numero, capacidad, disponible });
+    res.status(201).json({
+      data: mesa,
+      status: 201,
+      message: 'Mesa creada exitosamente'
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      status: 500, 
+      message: "error al crear la mesa",
+      error: error.message 
+    });
+    }
 };
 
 const actualizar = async (req, res, next) => {
