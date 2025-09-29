@@ -124,7 +124,7 @@ const actualizarEstado = async (req, res) => {
   }
 };
 
-// Eliminar pedido
+// Cancelar pedido
 const cancelar = async (req, res) => {
   try {
     const usuario = req.user;
