@@ -125,7 +125,7 @@ const actualizarEstado = async (req, res) => {
 };
 
 // Eliminar pedido
-const eliminar = async (req, res) => {
+const cancelar = async (req, res) => {
   try {
     const usuario = req.user;
     if (usuario.rol !== 'admin') {
@@ -161,4 +161,4 @@ const eliminar = async (req, res) => {
 };
 
 
-module.exports = { crear, listar, actualizarEstado, eliminar };
+module.exports = { crear, listar, actualizarEstado, cancelar };
