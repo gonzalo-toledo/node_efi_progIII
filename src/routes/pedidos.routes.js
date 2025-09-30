@@ -13,5 +13,5 @@ const router = Router();
 router.post('/',     verifyToken, checkRole('mesero','admin'), crear);
 router.get('/', listar);
 router.put('/:id',   verifyToken, checkRole('cocinero','mesero','admin'), actualizarEstado);
-router.delete('/:id',verifyToken, checkRole('admin'), eliminar);
+router.put('/:id',verifyToken, checkRole('admin'), cancelar);
 module.exports = router;
