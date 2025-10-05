@@ -13,7 +13,7 @@ module.exports = (sequelize, DataTypes) => {
     email:    { type: DataTypes.STRING,  allowNull: false, unique: true, field: 'email' },
     password: { type: DataTypes.STRING, allowNull: false },
     rol: {
-      type: DataTypes.ENUM('admin', 'cocinero', 'mesero'),
+      type: DataTypes.ENUM('admin', 'cocinero', 'mesero', 'cajero'),
       allowNull: false,
       defaultValue: 'mesero'
     },
