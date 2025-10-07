@@ -17,7 +17,16 @@ module.exports = {
       },
 
       estado: {
-        type: Sequelize.ENUM('pendiente', 'en preparación', 'listo', 'servido', 'cancelado'),
+        type: Sequelize.ENUM(
+          'pendiente', 
+          'en preparación', 
+          'listo', 
+          'servido', 
+          'cuenta solicitada',
+          'pagado',
+          'cancelado',
+          'cerrado'
+        ),
         allowNull: false,
         defaultValue: 'pendiente'
       },

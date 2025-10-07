@@ -31,6 +31,15 @@ module.exports = {
         is_active: true,
         created_at: now,
         updated_at: now
+      },
+      {
+        nombre: 'Cajero',
+        email: 'cajero@demo.com',
+        password: await bcrypt.hash('cajero123', 10),
+        rol: 'cajero',
+        is_active: true,
+        created_at: now,
+        updated_at: now
       }
     ], {});
   },

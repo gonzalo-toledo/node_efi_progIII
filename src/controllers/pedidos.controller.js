@@ -127,6 +127,7 @@ const crear = async (req, res) => {
 
 
 // Actualizar estado de un pedido
+// Actualizar estado de un pedido
 const actualizarEstado = async (req, res) => {
   try {
     const { estado } = req.body;
@@ -135,44 +136,79 @@ const actualizarEstado = async (req, res) => {
     const pedido = await Pedido.findByPk(req.params.id);
     if (!pedido) return res.status(404).json({ message: 'Pedido no encontrado' });
 
+    // No permitir cambiar estados finales
+    if (['cerrado', 'cancelado'].includes(pedido.estado)) {
+      return res.status(400).json({ 
+        message: 'No se puede modificar un pedido cerrado o cancelado' 
+      });
+    }
+
     // Lógica de transiciones según rol
     if (usuario.rol === 'cocinero') {
+      // Cocinero: pendiente → en preparación → listo
       if (pedido.estado === 'pendiente' && estado === 'en preparación') {
         pedido.estado = 'en preparación';
       } else if (pedido.estado === 'en preparación' && estado === 'listo') {
         pedido.estado = 'listo';
       } else {
-        return res.status(400).json({ message: 'Transición no permitida para cocinero' });
+        return res.status(400).json({ 
+          message: 'Transición no permitida. El cocinero solo puede: pendiente→en preparación→listo' 
+        });
       }
 
     } else if (usuario.rol === 'mesero') {
+      // Mesero: listo → servido → cuenta solicitada
       if (pedido.estado === 'listo' && estado === 'servido') {
         pedido.estado = 'servido';
       } else if (pedido.estado === 'servido' && estado === 'cuenta solicitada') {
         pedido.estado = 'cuenta solicitada';
       } else {
-        return res.status(400).json({ message: 'El mesero solo puede servir o pedir cuenta' });
+        return res.status(400).json({ 
+          message: 'Transición no permitida. El mesero solo puede: listo→servido→cuenta solicitada' 
+        });
       }
 
     } else if (usuario.rol === 'cajero') {
+      // Cajero: cuenta solicitada → pagado
       if (pedido.estado === 'cuenta solicitada' && estado === 'pagado') {
         pedido.estado = 'pagado';
       } else {
-        return res.status(400).json({ message: 'El cajero solo puede marcar un pedido como pagado' });
+        return res.status(400).json({ 
+          message: 'Transición no permitida. El cajero solo puede: cuenta solicitada→pagado' 
+        });
       }
 
     } else if (usuario.rol === 'admin') {
       // Admin puede forzar cualquier estado (auditoría o correcciones)
+      // Validar que el estado sea válido
+      const estadosValidos = [
+        'pendiente', 
+        'en preparación', 
+        'listo', 
+        'servido', 
+        'cuenta solicitada', 
+        'pagado',
+        'cancelado',
+        'cerrado'
+      ];
+      
+      if (!estadosValidos.includes(estado)) {
+        return res.status(400).json({ message: 'Estado no válido' });
+      }
+      
       pedido.estado = estado;
+      
     } else {
       return res.status(403).json({ message: 'Rol no autorizado para cambiar estados' });
     }
 
     await pedido.save();
+    
     res.json({
       data: pedido,
-      message: `Estado actualizado a ${pedido.estado} exitosamente`
+      message: `Estado actualizado a "${pedido.estado}" exitosamente`
     });
+    
   } catch (error) {
     res.status(500).json({
       message: 'Error al actualizar estado',

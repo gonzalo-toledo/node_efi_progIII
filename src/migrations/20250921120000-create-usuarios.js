@@ -7,7 +7,7 @@ module.exports = {
       email: { type: Sequelize.STRING, allowNull: false, unique: true },
       password: { type: Sequelize.STRING, allowNull: false },
       rol: {
-        type: Sequelize.ENUM('admin', 'cocinero', 'mesero'),
+        type: Sequelize.ENUM('admin', 'cocinero', 'mesero', 'cajero'),
         allowNull: false,
         defaultValue: 'mesero'
       },

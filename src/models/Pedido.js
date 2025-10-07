@@ -16,7 +16,16 @@ module.exports = (sequelize, DataTypes) => {
     mesaId: { type: DataTypes.INTEGER, allowNull: false },
     meseroId: { type: DataTypes.INTEGER, allowNull: false },
     estado: {
-      type: DataTypes.ENUM('pendiente', 'en preparación', 'listo', 'servido','cuenta solicitada', 'pagado', 'cancelado', 'cerrado'),
+      type: DataTypes.ENUM(
+        'pendiente', 
+        'en preparación', 
+        'listo', 
+        'servido', 
+        'cuenta solicitada',
+        'pagado',
+        'cancelado',
+        'cerrado'
+      ),
       allowNull: false,
       defaultValue: 'pendiente'
     },
