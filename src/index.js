@@ -8,6 +8,7 @@ const platosRoutes  = require('./routes/platos.routes');
 const mesasRoutes   = require('./routes/mesas.routes');
 const pedidosRoutes = require('./routes/pedidos.routes');
 const detallesRoutes= require('./routes/detalle_pedido.routes');
+const usuariosRoutes= require('./routes/usuarios.routes');
 
 const app = express();
 app.use(express.json());
@@ -15,6 +16,7 @@ app.use(express.json());
 app.use(cors());
 
 app.use('/auth', authRoutes);
+app.use('/usuarios', usuariosRoutes);
 app.use('/platos', platosRoutes);
 app.use('/mesas', mesasRoutes);
 app.use('/pedidos', pedidosRoutes);

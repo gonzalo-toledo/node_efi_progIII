@@ -3,12 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
+    "dev": "nodemon src/index.js",
     "start": "node src/index.js",
-    "create-db": "node scripts/create-db.js",
-    "db:migrate": "npx sequelize-cli db:migrate",
-    "db:seed": "npx sequelize-cli db:seed:all",
-    "db:reset": "npx sequelize-cli db:migrate:undo:all && npx sequelize-cli db:migrate && npx sequelize-cli db:seed:all",
-    "db:all:seed": "npm run create-db && npm run db:migrate && npm run db:seed"
+    "create-db": "node scripts/create-db.js"
   },
   "keywords": [],
   "author": "",

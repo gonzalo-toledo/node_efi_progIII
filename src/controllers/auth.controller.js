@@ -42,6 +42,29 @@ const profile = async (req, res, next) => {
   } catch (e) { next(e); }
 };
 
+
+const updateProfile = async (req, res, next) => {
+  try {
+    const { nombre, email } = req.body;
+    const user = await Usuario.findByPk(req.user.id);
+    if (!user) return res.status(404).json({ message: 'Usuario no encontrado' });
+
+    user.nombre = nombre || user.nombre;
+    user.email = email || user.email;
+
+    await user.save();
+
+    res.json({
+      id: user.id,
+      nombre: user.nombre,
+      email: user.email,
+      rol: user.rol
+    });
+  } catch (e) {
+    next(e);
+  }
+};
+
 // ===== Recupero de contraseña (DEV: tokens en memoria) =====
 const resetTokens = new Map(); // key: userId, value: { tokenHash, expiresAt }
 
@@ -110,5 +133,6 @@ module.exports = {
   login,
   profile,
   forgotPassword,
-  resetPassword
+  resetPassword,
+  updateProfile,
 };
