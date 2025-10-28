@@ -1,19 +1,21 @@
-const mysql = require('mysql2/promise')
+// scripts/create-db.js
+require('dotenv').config();
+const mysql = require('mysql2/promise');
 
-const createDataBase = async () =>
-{
-    try{
-        const connection = await mysql.createConnection({
-            host: process.env.DB_HOST,
-            user: process.env.DB_USER,
-            password: process.env.DB_PASSWORD,
-            });
-        await connection.query('CREATE DATABASE IF NOT EXISTS restaurant_app;')
-        console.log('La base de datos se creo o ya existia')
-        await connection.end()
-    } catch (error) {
-        console.error('Error al crear la base de datos:', error.message);
-    }
-} 
+(async () => {
+  try {
+    const connection = await mysql.createConnection({
+      host: process.env.MYSQLHOST,
+      port: process.env.MYSQLPORT,
+      user: process.env.MYSQLUSER,
+      password: process.env.MYSQLPASSWORD,
+    });
 
-createDataBase();
+    await connection.query(`CREATE DATABASE IF NOT EXISTS \`${process.env.MYSQLDATABASE}\`;`);
+    console.log(`Base de datos "${process.env.MYSQLDATABASE}" creada o ya existía.`);
+    await connection.end();
+  } catch (error) {
+    console.error('Error al crear la base de datos:', error.message);
+    process.exit(1);
+  }
+})();

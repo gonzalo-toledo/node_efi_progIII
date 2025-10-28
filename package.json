@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
+    "create-db": "node src/createDatabase.js",
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "db:create": "npx sequelize-cli db:create"
